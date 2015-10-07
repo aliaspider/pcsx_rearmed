@@ -55,7 +55,8 @@ static void __clear_cache(void *start, void *end) {
 }
 #elif defined(_3DS)
 #include "3ds_utils.h"
-#define __clear_cache(start,end) svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start))
+//#define __clear_cache(start,end) svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start))
+#define __clear_cache(start,end) check_translation_cache();ctr_flush_DCache_range(start, end)
 #endif
 
 #define MAXBLOCK 4096
@@ -1229,8 +1230,10 @@ void invalidate_addr(u_int addr)
 void invalidate_all_pages()
 {
   u_int page,n;
+  check_translation_cache();
   for(page=0;page<4096;page++)
     invalidate_page(page);
+  check_translation_cache();
   for(page=0;page<1048576;page++)
     if(!invalid_code[page]) {
       restore_candidate[(page&2047)>>3]|=1<<(page&7);
@@ -1238,6 +1241,8 @@ void invalidate_all_pages()
     }
   #ifdef __arm__
   __clear_cache((void *)BASE_ADDR,(void *)BASE_ADDR+(1<<TARGET_SIZE_2));
+     memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+     memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   #endif
   #ifdef USE_MINI_HT
   memset(mini_ht,-1,sizeof(mini_ht));
@@ -7920,6 +7925,9 @@ static void disassemble_inst(int i) {}
 
 static int new_dynarec_test(void)
 {
+//   return 1;
+   memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+   memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   int (*testfunc)(void) = (void *)out;
   int ret;
   emit_movimm(DRC_TEST_VAL,0); // test
@@ -7934,7 +7942,10 @@ static int new_dynarec_test(void)
     SysPrintf("test passed.\n");
   else
     SysPrintf("test failed: %08x\n", ret);
+  DEBUG_HOLD();
   out=(u_char *)BASE_ADDR;
+  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   return ret == DRC_TEST_VAL;
 }
 
@@ -7944,6 +7955,8 @@ void new_dynarec_clear_full()
 {
   int n;
   out=(u_char *)BASE_ADDR;
+  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   memset(invalid_code,1,sizeof(invalid_code));
   memset(hash_table,0xff,sizeof(hash_table));
   memset(mini_ht,-1,sizeof(mini_ht));
@@ -7974,6 +7987,8 @@ void new_dynarec_init()
 {
   SysPrintf("Init new dynarec\n");
   out=(u_char *)BASE_ADDR;
+  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
 #if BASE_ADDR_FIXED
   if (mmap (out, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -8187,6 +8202,7 @@ int new_recompile_block(int addr)
   u_int state_rflags = 0;
   int i;
 
+  check_translation_cache();
   assem_debug("NOTCOMPILED: addr = %x -> %x\n", (int)addr, (int)out);
   //printf("NOTCOMPILED: addr = %x -> %x\n", (int)addr, (int)out);
   //printf("TRACE: count=%d next=%d (compile %x)\n",Count,next_interupt,addr);
@@ -8248,7 +8264,7 @@ int new_recompile_block(int addr)
   //printf("addr = %x source = %x %x\n", addr,source,source[0]);
   
   /* Pass 1 disassembly */
-
+check_translation_cache();
   for(i=0;!done;i++) {
     bt[i]=0;likely[i]=0;ooo[i]=0;op2=0;
     minimum_free_regs[i]=0;
@@ -8904,11 +8920,11 @@ int new_recompile_block(int addr)
   assert(slen>0);
 
   /* Pass 2 - Register dependencies and branch targets */
-
+check_translation_cache();
   unneeded_registers(0,slen-1,0);
   
   /* Pass 3 - Register allocation */
-
+check_translation_cache();
   struct regstat current; // Current register allocations/status
   current.is32=1;
   current.dirty=0;
@@ -9921,7 +9937,7 @@ int new_recompile_block(int addr)
   }
   
   /* Pass 4 - Cull unused host registers */
-  
+  check_translation_cache();
   uint64_t nr=0;
   
   for (i=slen-1;i>=0;i--)
@@ -10200,7 +10216,7 @@ int new_recompile_block(int addr)
   // If a register is allocated during a loop, try to allocate it for the
   // entire loop, if possible.  This avoids loading/storing registers
   // inside of the loop.
-  
+  check_translation_cache();
   signed char f_regmap[HOST_REGS];
   clear_all_regs(f_regmap);
   for(i=0;i<slen-1;i++)
@@ -10925,10 +10941,10 @@ int new_recompile_block(int addr)
       }
     }
   }
-  
+  check_translation_cache();
   /* Pass 6 - Optimize clean/dirty state */
   clean_registers(0,slen-1,1);
-  
+  check_translation_cache();
   /* Pass 7 - Identify 32-bit registers */
 #ifndef FORCE32
   provisional_r32();
@@ -11281,7 +11297,7 @@ int new_recompile_block(int addr)
     }
   }
 #endif // DISASM
-
+   check_translation_cache();
   /* Pass 8 - Assembly */
   linkcount=0;stubcount=0;
   ds=0;is_delayslot=0;
@@ -11513,7 +11529,7 @@ int new_recompile_block(int addr)
 
   if (instr_addr0_override)
     instr_addr[0] = instr_addr0_override;
-
+check_translation_cache();
   /* Pass 9 - Linker */
   for(i=0;i<linkcount;i++)
   {
@@ -11524,15 +11540,17 @@ int new_recompile_block(int addr)
       void *stub=out;
       void *addr=check_addr(link_addr[i][1]);
       emit_extjump(link_addr[i][0],link_addr[i][1]);
+      check_translation_cache();
       if(addr) {
         set_jump_target(link_addr[i][0],(int)addr);
         add_link(link_addr[i][1],stub);
-      }
+      }      
       else set_jump_target(link_addr[i][0],(int)stub);
     }
     else
     {
       // Internal branch
+       check_translation_cache();
       int target=(link_addr[i][1]-start)>>2;
       assert(target>=0&&target<slen);
       assert(instr_addr[target]);
@@ -11543,6 +11561,7 @@ int new_recompile_block(int addr)
       //#endif
     }
   }
+  check_translation_cache();
   // External Branch Targets (jump_in)
   if(copy+slen*4>(void *)shadow+sizeof(shadow)) copy=shadow;
   for(i=0;i<slen;i++)
@@ -11551,6 +11570,7 @@ int new_recompile_block(int addr)
     {
       if(instr_addr[i]) // TODO - delay slots (=null)
       {
+         check_translation_cache();
         u_int vaddr=start+i*4;
         u_int page=get_page(vaddr);
         u_int vpage=get_vpage(vaddr);
@@ -11576,17 +11596,21 @@ int new_recompile_block(int addr)
       }
     }
   }
+  check_translation_cache();
   // Write out the literal pool if necessary
   literal_pool(0);
+  check_translation_cache();
   #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
   // Align code
+  check_translation_cache();
   if(((u_int)out)&7) emit_addnop(13);
   #endif
   assert((u_int)out-beginning<MAX_OUTPUT_BLOCK_SIZE);
   //printf("shadow buffer: %x-%x\n",(int)copy,(int)copy+slen*4);
+  check_translation_cache();
   memcpy(copy,source,slen*4);
   copy+=slen*4;
-  
+  check_translation_cache();
   #ifdef __arm__
   __clear_cache((void *)beginning,out);
   #endif
@@ -11618,7 +11642,7 @@ int new_recompile_block(int addr)
       invalid_code[((u_int)0x80000000>>12)|(i&0x1ff)]=
       invalid_code[((u_int)0xa0000000>>12)|(i&0x1ff)]=0;
 #endif
-  
+  check_translation_cache();
   /* Pass 10 - Free memory by expiring oldest blocks */
   
   int end=((((int)out-(int)BASE_ADDR)>>(TARGET_SIZE_2-16))+16384)&65535;

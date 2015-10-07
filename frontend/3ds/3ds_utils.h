@@ -3,6 +3,7 @@
 
 void ctr_invalidate_ICache(void);
 void ctr_flush_DCache(void);
+void ctr_flush_DCache_range(void* start, void* end);
 
 void ctr_flush_invalidate_cache(void);
 

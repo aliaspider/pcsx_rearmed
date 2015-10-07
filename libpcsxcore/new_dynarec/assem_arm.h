@@ -1,3 +1,9 @@
+#ifndef __ASSEM_ARM_H_
+#define __ASSEM_ARM_H_
+
+#include "../psxcommon.h"
+#include "3ds_utils.h"
+
 #define HOST_REGS 13
 #define HOST_CCREG 10
 #define HOST_BTREG 8
@@ -57,7 +63,7 @@
 
 extern char *invc_ptr;
 
-#define TARGET_SIZE_2 24 // 2^24 = 16 megabytes
+#define TARGET_SIZE_2 22 // 2^24 = 16 megabytes
 
 // Code generator target address
 #if BASE_ADDR_FIXED
@@ -68,6 +74,36 @@ extern char *invc_ptr;
 extern char* translation_cache;
 #else
 extern char translation_cache[1 << TARGET_SIZE_2];
+extern char translation_cache_w[1 << TARGET_SIZE_2];
+//extern char* translation_cache_w;
 #endif
 #define BASE_ADDR (u_int)translation_cache
+#define BASE_ADDR_MAX ((u_int)translation_cache + 0x400000)
+
+#define BASE_ADDR_OFFSET ((u_int)translation_cache_w - (u_int)translation_cache)
+
+//#define check_addrX(ptr)   do {if(((u32)ptr<BASE_ADDR_MAX)&&((u32)ptr > BASE_ADDR_MAX)) DEBUG_HOLD(); }while(0)
+
+//#define check_translation_cache()    do {u32* ptr;for(ptr = (u32*)translation_cache; ptr <  (u32*)(translation_cache+0x100); ptr++) {if(*ptr){ printf("* 0x%08X = 0x%08X\n", ptr, *ptr);DEBUG_HOLD();break;}} }while(0)
+#define check_translation_cache() do{}while(0)
+
+//extern u32* translation_cache_clean;
+//#define check_translation_cache()  \
+//do{  \
+//   u32* ptr;  \
+//   for(ptr = (u32*)translation_cache_clean; ptr < (u32*)(BASE_ADDR_MAX); ptr++)  \
+//   {  \
+//      if(*ptr != 0xFCFCFCFC)  \
+//      {  \
+//         printf("* 0x%08X = 0x%08X\n", ptr, *ptr);  \
+//         DEBUG_HOLD();  \
+//         break;  \
+//      }  \
+//   }  \
+//}while(0)
+
+
 #endif
+
+
+#endif //__ASSEM_ARM_H_

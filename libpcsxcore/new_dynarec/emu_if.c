@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-
+#include "../../frontend/3ds/3ds_utils.h"
 #include "emu_if.h"
 #include "pcsxmem.h"
 #include "../psxhle.h"
@@ -369,6 +369,7 @@ static void ari64_execute_until()
 static void ari64_execute()
 {
 	while (!stop) {
+//      DEBUG_HOLD();
 		ari64_execute_until();
 		evprintf("drc left @%08x\n", psxRegs.pc);
 	}

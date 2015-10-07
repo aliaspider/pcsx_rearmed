@@ -1217,6 +1217,10 @@ void retro_run(void)
 {
 	int i;
 
+   extern Handle gspEvents[GSPEVENT_MAX];
+   svcWaitSynchronization(gspEvents[GSPEVENT_P3D], 20000000);
+   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], 20000000);
+
 	input_poll_cb();
 
 	bool updated = false;
