@@ -7,7 +7,7 @@
 #include "string.h"
 #include "stdio.h"
 
-
+#include "3ds_utils.h"
 #define CTR_PTHREAD_STACK_SIZE 0x10000
 
 typedef struct
@@ -21,6 +21,7 @@ static inline int pthread_create(pthread_t *thread,
       const pthread_attr_t *attr, void *(*start_routine)(void*), void *arg)
 {
 
+//   DEBUG_HOLD();
    thread->stack =  linearMemAlign(CTR_PTHREAD_STACK_SIZE, 8);
 
    svcCreateThread(&thread->handle, (ThreadFunc)start_routine,arg,

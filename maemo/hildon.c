@@ -663,6 +663,7 @@ int maemo_init(int *argc, char ***argv)
 	set_accel_multipliers();
 
 	if (bKeepDisplayOn){
+      DEBUG_HOLD();
 		if (pthread_create(&display_thread, NULL, displayThread, NULL))
 			printf("Failed to create display thread.\n");		
 	}

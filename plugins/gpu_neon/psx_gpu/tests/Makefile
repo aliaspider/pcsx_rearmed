@@ -13,9 +13,9 @@ CFLAGS += -mcpu=cortex-a8 -mfpu=neon -DNEON_BUILD
 ASFLAGS = $(CFLAGS)
 OBJ += psx_gpu_arm_neon.o
 endif
-ifndef DEBUG
-CFLAGS += -O2 -DNDEBUG
-endif
+#ifndef DEBUG
+#CFLAGS += -O2 -DNDEBUG
+#endif
 
 OBJ += psx_gpu.o psx_gpu_parse.o psx_gpu_main.o
 

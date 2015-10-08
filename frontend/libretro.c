@@ -1218,6 +1218,7 @@ void retro_run(void)
 	int i;
 
 	input_poll_cb();
+//   printf("XXXX: hello !\n");fflush(stdout);
 
 	bool updated = false;
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)

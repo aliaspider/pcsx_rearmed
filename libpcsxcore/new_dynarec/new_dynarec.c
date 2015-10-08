@@ -53,9 +53,23 @@ static void __clear_cache(void *start, void *end) {
   sys_dcache_flush(start, len);
   sys_icache_invalidate(start, len);
 }
-#elif defined(_3DS)
+#elif defined(_3DS2)
 #include "3ds_utils.h"
 #define __clear_cache(start,end) svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start))
+#else
+static void __clear_cache2(void *start, void *end) {
+  size_t len = (char *)end - (char *)start;
+
+//  mprotect(translation_cache, 1<<TARGET_SIZE_2, PROT_WRITE);
+  memcpy(start, to_write_buffer_u32(start), len);
+//  mprotect(translation_cache, 1<<TARGET_SIZE_2, PROT_EXEC);
+
+  __clear_cache(start, end);
+}
+#define __clear_cache(start, end)  __clear_cache2(start, end)
+
+#define assert(...)   (void)0
+
 #endif
 
 #define MAXBLOCK 4096
@@ -1238,6 +1252,8 @@ void invalidate_all_pages()
     }
   #ifdef __arm__
   __clear_cache((void *)BASE_ADDR,(void *)BASE_ADDR+(1<<TARGET_SIZE_2));
+  memset((void *)BASE_ADDR, 0, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0, (1<<TARGET_SIZE_2));
   #endif
   #ifdef USE_MINI_HT
   memset(mini_ht,-1,sizeof(mini_ht));
@@ -7929,12 +7945,16 @@ static int new_dynarec_test(void)
   __clear_cache((void *)testfunc, out);
 #endif
   SysPrintf("testing if we can run recompiled code..\n");
+//  mprotect(translation_cache, 1<<TARGET_SIZE_2, PROT_EXEC);
   ret = testfunc();
+//  mprotect(translation_cache, 1<<TARGET_SIZE_2, 0);
   if (ret == DRC_TEST_VAL)
     SysPrintf("test passed.\n");
   else
     SysPrintf("test failed: %08x\n", ret);
   out=(u_char *)BASE_ADDR;
+  memset((void *)BASE_ADDR, 0, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0, (1<<TARGET_SIZE_2));
   return ret == DRC_TEST_VAL;
 }
 
@@ -7944,6 +7964,8 @@ void new_dynarec_clear_full()
 {
   int n;
   out=(u_char *)BASE_ADDR;
+  memset((void *)BASE_ADDR, 0, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0, (1<<TARGET_SIZE_2));
   memset(invalid_code,1,sizeof(invalid_code));
   memset(hash_table,0xff,sizeof(hash_table));
   memset(mini_ht,-1,sizeof(mini_ht));
@@ -7974,6 +7996,8 @@ void new_dynarec_init()
 {
   SysPrintf("Init new dynarec\n");
   out=(u_char *)BASE_ADDR;
+  memset((void *)BASE_ADDR, 0, (1<<TARGET_SIZE_2));
+  memset((void *)translation_cache_w, 0, (1<<TARGET_SIZE_2));
 #if BASE_ADDR_FIXED
   if (mmap (out, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -7984,6 +8008,7 @@ void new_dynarec_init()
 #else
   // not all systems allow execute in data segment by default
   if (mprotect(out, 1<<TARGET_SIZE_2, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
+//  if (mprotect(out, 1<<TARGET_SIZE_2, PROT_EXEC) != 0)
     SysPrintf("mprotect() failed: %s\n", strerror(errno));
 #endif
 #ifdef MUPEN64

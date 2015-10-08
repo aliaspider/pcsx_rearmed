@@ -3,9 +3,14 @@
 # default stuff goes here, so that config can override
 TARGET ?= pcsx
 CFLAGS += -Wall -ggdb -Iinclude -ffast-math
-ifndef DEBUG
-CFLAGS += -O2 -DNDEBUG
-endif
+#ifndef DEBUG
+#CFLAGS += -O2 -DNDEBUG
+#endif
+#ifeq ($(DEBUG),1)
+LOCAL_CFLAGS += -O0 -g
+#else
+#LOCAL_CFLAGS += -O3 -DNDEBUG
+#endif
 CXXFLAGS += $(CFLAGS)
 #DRC_DBG = 1
 #PCNT = 1
