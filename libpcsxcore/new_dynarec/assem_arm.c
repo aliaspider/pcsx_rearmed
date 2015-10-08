@@ -2705,7 +2705,7 @@ void literal_pool(int n)
     u_int offset=l_addr-(u_int)ptr-8;
     assert(offset<4096);
     assert(!(offset&3));
-    *to_write_buffer_u8(ptr)|=offset;
+    *to_write_buffer_u32(ptr)|=offset;
     if(l_addr==(u_int)out) {
       literals[i][0]=l_addr; // remember for dupes
       output_w32(literals[i][1]);
