@@ -85,11 +85,13 @@ void ctr_flush_invalidate_cache(void)
    ctr_invalidate_ICache();
 }
 
-extern char translation_cache[1 << 22];
-extern char translation_cache_w[1 << 22];
+extern char translation_cache[1 << 23];
+extern char translation_cache_w[1 << 23];
 
 static u32 translation_cache_voffset;
 static u32 translation_cache_w_voffset;
+
+uint32_t currentHandle;
 
 int ctr_svchack_init(void)
 {
@@ -101,10 +103,9 @@ int ctr_svchack_init(void)
    /* CFW */
    ctr_enable_all_svc();
 
-   uint32_t currentHandle;
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
    svcControlProcessMemory(currentHandle, (u32)translation_cache, 0x0,
-                           0x400000, MEMOP_PROT, 0b111);
+                           0x800000, MEMOP_PROT, 0b111);
 
 //   svcControlProcessMemory(currentHandle, (u32)translation_cache_w, 0x0,
 //                           0x400000, MEMOP_PROT, 0b111);
@@ -119,6 +120,7 @@ int ctr_svchack_init(void)
    printf("translation_cache_w         : 0x%08X\n", translation_cache_w);
    printf("translation_cache_w PA      : 0x%08X\n", get_PA((u32)translation_cache_w));
    printf("translation_cache_w_voffset : 0x%08X\n", translation_cache_w_voffset);
+   printf("diff W-X: 0x%08X\n", (u32)translation_cache_w - (u32)translation_cache);
    DEBUG_HOLD();
 
    u32 ptr, ptr_offset, test_passed;
@@ -191,7 +193,7 @@ void GSPwn(void *dest, const void *src, size_t size)
 }
 
 u32* translation_cache_clean = translation_cache;
-void ctr_flush_DCache_range2(void* start, void* end)
+void ctr_flush_DCache_range11(void* start, void* end)
 {
    start = (void*)((u32)start & ~0xF);
    end   = (void*)(((u32)end   + 0xF) & ~0xF);
@@ -244,18 +246,18 @@ void ctr_flush_DCache_range(void* start, void* end)
 //         break;
 //      }
 //   }
-   u32* tmp1, *tmp2;
-   for (tmp1 = translation_cache, tmp2=translation_cache_w; tmp1 < start; tmp1++,tmp2++)
-   {
-      if(*tmp1 != *tmp2)
-      {
-         printf("tmp1 : 0x%08X = 0x%08X\ntmp2 : 0x%08X = 0x%08X\n", tmp1, *tmp1, tmp2, *tmp2);
-         DEBUG_HOLD();
-         break;
-      }
-   }
+//   u32* tmp1, *tmp2;
+//   for (tmp1 = translation_cache, tmp2=translation_cache_w; tmp1 < start; tmp1++,tmp2++)
+//   {
+//      if(*tmp1 != *tmp2)
+//      {
+//         printf("tmp1 : 0x%08X = 0x%08X\ntmp2 : 0x%08X = 0x%08X\n", tmp1, *tmp1, tmp2, *tmp2);
+//         DEBUG_HOLD();
+//         break;
+//      }
+//   }
 
-   translation_cache_clean = end;
+//   translation_cache_clean = end;
 
    memcpy(dst, src, size);
 //   svcFlushProcessDataCache(0xFFFF8001, (u32)dst , size);

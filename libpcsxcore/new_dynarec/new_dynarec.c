@@ -1241,8 +1241,8 @@ void invalidate_all_pages()
     }
   #ifdef __arm__
   __clear_cache((void *)BASE_ADDR,(void *)BASE_ADDR+(1<<TARGET_SIZE_2));
-     memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
-     memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
+//     memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+//     memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   #endif
   #ifdef USE_MINI_HT
   memset(mini_ht,-1,sizeof(mini_ht));
@@ -7926,10 +7926,11 @@ static void disassemble_inst(int i) {}
 static int new_dynarec_test(void)
 {
 //   return 1;
-   memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
-   memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
+//   memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+//   memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   int (*testfunc)(void) = (void *)out;
   int ret;
+  DEBUG_HOLD();
   emit_movimm(DRC_TEST_VAL,0); // test
   emit_jmpreg(14);
   literal_pool(0);
@@ -7944,8 +7945,8 @@ static int new_dynarec_test(void)
     SysPrintf("test failed: %08x\n", ret);
   DEBUG_HOLD();
   out=(u_char *)BASE_ADDR;
-  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
-  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
+//  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+//  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   return ret == DRC_TEST_VAL;
 }
 
@@ -7955,8 +7956,8 @@ void new_dynarec_clear_full()
 {
   int n;
   out=(u_char *)BASE_ADDR;
-  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
-  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
+//  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+//  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
   memset(invalid_code,1,sizeof(invalid_code));
   memset(hash_table,0xff,sizeof(hash_table));
   memset(mini_ht,-1,sizeof(mini_ht));
@@ -7987,8 +7988,8 @@ void new_dynarec_init()
 {
   SysPrintf("Init new dynarec\n");
   out=(u_char *)BASE_ADDR;
-  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
-  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
+//  memset((void *)BASE_ADDR, 0xFC, (1<<TARGET_SIZE_2));
+//  memset((void *)translation_cache_w, 0xFC, (1<<TARGET_SIZE_2));
 #if BASE_ADDR_FIXED
   if (mmap (out, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,

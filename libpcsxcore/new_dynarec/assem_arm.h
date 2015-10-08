@@ -63,7 +63,7 @@
 
 extern char *invc_ptr;
 
-#define TARGET_SIZE_2 22 // 2^24 = 16 megabytes
+#define TARGET_SIZE_2 23 // 2^24 = 16 megabytes
 
 // Code generator target address
 #if BASE_ADDR_FIXED
@@ -78,7 +78,7 @@ extern char translation_cache_w[1 << TARGET_SIZE_2];
 //extern char* translation_cache_w;
 #endif
 #define BASE_ADDR (u_int)translation_cache
-#define BASE_ADDR_MAX ((u_int)translation_cache + 0x400000)
+//#define BASE_ADDR_MAX ((u_int)translation_cache + 0x800000)
 
 #define BASE_ADDR_OFFSET ((u_int)translation_cache_w - (u_int)translation_cache)
 

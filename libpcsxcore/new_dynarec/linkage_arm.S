@@ -204,8 +204,12 @@ ptr_hash_table:
 	lsl	r2, r2, #6
 	sub	r1, r1, #2
 	add	r1, r1, r2, lsr #8
+   add   r5, #0x00021000
+   add   r5, #0x00E00000
 	str	r1, [r5]
-	mov	pc, r8
+   sub   r5, #0x00021000
+   sub   r5, #0x00E00000
+   mov	pc, r8
 3:
 	/* hash_table lookup */
 	cmp	r2, #2048
