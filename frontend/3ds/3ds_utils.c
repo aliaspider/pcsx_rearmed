@@ -86,6 +86,7 @@ void ctr_flush_invalidate_cache(void)
 }
 
 extern char translation_cache[1 << 22];
+//extern char * translation_cache;
 extern char translation_cache_w[1 << 22];
 
 static u32 translation_cache_voffset;
@@ -102,15 +103,16 @@ int ctr_svchack_init(void)
 
    /* CFW */
    ctr_enable_all_svc();
-
+#if 0
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
    svcControlProcessMemory(currentHandle, (u32)translation_cache, 0x0,
 //                           0x400000, MEMOP_PROT, 0b111);
-                           0x800000, MEMOP_PROT, 0b101);
+                           0x400000, MEMOP_PROT, 0b101);
 ////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w, 0x0,
 ////                           0x400000, MEMOP_PROT, 0b111);
 
    svcCloseHandle(currentHandle);
+#endif
 
    translation_cache_w_voffset = get_PA((u32)translation_cache_w) - (u32)translation_cache_w - 0x0C000000;
    translation_cache_voffset = get_PA((u32)translation_cache) - (u32)translation_cache - 0x0C000000;
@@ -187,7 +189,7 @@ void GSPwn(void *dest, const void *src, size_t size)
 	if (GX_SetTextureCopy(NULL, src, 0, dest, 0, size, 8))
 		exit(1);
    svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
-   svcSleepThread(100000);
+   svcSleepThread(1000000);
 
 //   gspWaitForPPF();
 
@@ -231,7 +233,7 @@ void ctr_flush_DCache_range(void* start, void* end)
 //   svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start));
 }
 #include <string.h>
-void ctr_flush_DCache_range11(void* start, void* end)
+void ctr_flush_DCache_range1(void* start, void* end)
 {
 //   printf("start : 0x%08X, end: 0x%08X\n", start, end);
 //   DEBUG_HOLD();

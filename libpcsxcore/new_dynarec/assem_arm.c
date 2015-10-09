@@ -33,9 +33,25 @@
 #ifdef VITA
 char* translation_cache = 0;
 #elif !BASE_ADDR_FIXED
-//char translation_cache[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
+char translation_cache33[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
 char translation_cache_w[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
 #endif
+
+//void useless_function(void)
+//{
+//   __asm__ volatile(
+////   ".section .bss \t\n"
+//   ".align	15 \t\n"
+////   ".space	0x100000 \t\n"
+//   ".global translation_cache \t\n"
+//   ".global _translation_cache \t\n"
+//   ".type	translation_cache, %object \t\n"
+//   ".size	translation_cache, 0x800000 \t\n"
+//   "translation_cache: \t\n"
+//   "_translation_cache: \t\n"
+//   "   .space	0x800000 \t\n");
+
+//}
 
 #ifndef __MACH__
 #define CALLER_SAVE_REGS 0x100f
