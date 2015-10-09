@@ -33,8 +33,8 @@
 #ifdef VITA
 char* translation_cache = 0;
 #elif !BASE_ADDR_FIXED
-char translation_cache33[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
-char translation_cache_w[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
+//char translation_cache[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
+//char translation_cache_w[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
 #endif
 
 //void useless_function(void)

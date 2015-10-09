@@ -9,9 +9,16 @@
 .align	15
 .space	0x100000
 .global translation_cache
-#.global _translation_cache
 .type	translation_cache, %object
 .size	translation_cache, 0x400000
 translation_cache:
-#_translation_cache:
+	.space	0x400000
+
+.section .bss
+.align	15
+.space	0x100000
+.global translation_cache_w
+.type	translation_cache_w, %object
+.size	translation_cache_w, 0x400000
+translation_cache_w:
 	.space	0x400000
