@@ -106,7 +106,7 @@ int ctr_svchack_init(void)
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
    svcControlProcessMemory(currentHandle, (u32)translation_cache, 0x0,
 //                           0x400000, MEMOP_PROT, 0b111);
-                           0x400000, MEMOP_PROT, 0b101);
+                           0x800000, MEMOP_PROT, 0b101);
 ////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w, 0x0,
 ////                           0x400000, MEMOP_PROT, 0b111);
 
