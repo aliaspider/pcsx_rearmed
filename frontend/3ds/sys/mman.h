@@ -40,11 +40,12 @@ static inline int mprotect(void *addr, size_t len, int prot)
 
    if(ctr_svchack_init_success)
    {
-      uint32_t currentHandle;
-      svcDuplicateHandle(&currentHandle, 0xFFFF8001);
-      svcControlProcessMemory(currentHandle, (u32)addr, 0x0,
-                              len, MEMOP_PROT, prot);
-      svcCloseHandle(currentHandle);
+//      uint32_t currentHandle;
+//      svcDuplicateHandle(&currentHandle, 0xFFFF8001);
+//      svcControlProcessMemory(currentHandle, (u32)addr, 0x0,
+//                              len, MEMOP_PROT, prot);
+//                              len, MEMOP_PROT, MEMPERM_EXECUTE | MEMPERM_READ);
+//      svcCloseHandle(currentHandle);
       return 0;
    }
 

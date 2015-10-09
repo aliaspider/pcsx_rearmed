@@ -53,9 +53,11 @@ static void __clear_cache(void *start, void *end) {
   sys_dcache_flush(start, len);
   sys_icache_invalidate(start, len);
 }
-#elif defined(_3DS2)
+#elif defined(_3DS)
 #include "3ds_utils.h"
-#define __clear_cache(start,end) svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start))
+//#define __clear_cache(start,end) svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start))
+#define __clear_cache(start,end) ctr_flush_DCache_range(start, end)
+#define assert(...)   (void)0
 #else
 static void __clear_cache2(void *start, void *end) {
   size_t len = (char *)end - (char *)start;
@@ -68,7 +70,7 @@ static void __clear_cache2(void *start, void *end) {
 }
 #define __clear_cache(start, end)  __clear_cache2(start, end)
 
-#define assert(...)   (void)0
+//#define assert(...)   (void)0
 
 #endif
 
@@ -7946,6 +7948,7 @@ static int new_dynarec_test(void)
 #endif
   SysPrintf("testing if we can run recompiled code..\n");
 //  mprotect(translation_cache, 1<<TARGET_SIZE_2, PROT_EXEC);
+//  DEBUG_HOLD();
   ret = testfunc();
 //  mprotect(translation_cache, 1<<TARGET_SIZE_2, 0);
   if (ret == DRC_TEST_VAL)
@@ -8007,8 +8010,8 @@ void new_dynarec_init()
   }
 #else
   // not all systems allow execute in data segment by default
-//  if (mprotect(out, 1<<TARGET_SIZE_2, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-  if (mprotect(out, 1<<TARGET_SIZE_2, PROT_EXEC) != 0)
+  if (mprotect(out, 1<<TARGET_SIZE_2, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
+//  if (mprotect(out, 1<<TARGET_SIZE_2, PROT_EXEC) != 0)
     SysPrintf("mprotect() failed: %s\n", strerror(errno));
 #endif
 #ifdef MUPEN64
