@@ -147,6 +147,7 @@ else ifeq ($(platform), ctr)
 	CFLAGS += -Werror=implicit-function-declaration
 
 	OBJS += frontend/3ds/3ds_utils.o
+#   OBJS += frontend/3ds/translation_cache.o
 
 
 #	CFLAGS += -DPCSX

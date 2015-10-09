@@ -105,8 +105,8 @@ int ctr_svchack_init(void)
 
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
    svcControlProcessMemory(currentHandle, (u32)translation_cache, 0x0,
-                           0x400000, MEMOP_PROT, 0b111);
-
+//                           0x400000, MEMOP_PROT, 0b111);
+                           0x400000, MEMOP_PROT, 0b101);
 ////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w, 0x0,
 ////                           0x400000, MEMOP_PROT, 0b111);
 
@@ -187,13 +187,13 @@ void GSPwn(void *dest, const void *src, size_t size)
 	if (GX_SetTextureCopy(NULL, src, 0, dest, 0, size, 8))
 		exit(1);
    svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
-   svcSleepThread(1000);
+   svcSleepThread(10000);
 
 //   gspWaitForPPF();
 
 }
 
-u32* translation_cache_clean = translation_cache;
+//u32* translation_cache_clean = translation_cache;
 void ctr_flush_DCache_range(void* start, void* end)
 {
    start = (void*)((u32)start & ~0xF);
