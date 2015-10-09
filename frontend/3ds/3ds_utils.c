@@ -187,7 +187,7 @@ void GSPwn(void *dest, const void *src, size_t size)
 	if (GX_SetTextureCopy(NULL, src, 0, dest, 0, size, 8))
 		exit(1);
    svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
-   svcSleepThread(10000);
+   svcSleepThread(100000);
 
 //   gspWaitForPPF();
 

@@ -1,13 +1,12 @@
+#char translation_cache[1 << 22] __attribute__((aligned(4096)));
 
-.text
+.bss
 .align	12
 .global translation_cache
 .global _translation_cache
 .type	translation_cache, %object
-.size	translation_cache, 8*1024*1024
+.size	translation_cache, 0x400000
 translation_cache:
 _translation_cache:
-	.space	8*1024*1024
+	.space	0x400000
 
-
-@ vim:filetype=armasm
