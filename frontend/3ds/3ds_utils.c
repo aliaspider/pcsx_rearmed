@@ -1,6 +1,7 @@
 
 #include "3ds.h"
 #include "3ds_utils.h"
+#include "../libpcsxcore/new_dynarec/assem_arm.h"
 #include <stdlib.h>
 
 typedef s32 (*ctr_callback_type)(void);
@@ -93,9 +94,14 @@ static u32 translation_cache_voffset;
 static u32 translation_cache_w_voffset;
 
 uint32_t currentHandle;
-
+//char translation_cache[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
 int ctr_svchack_init(void)
 {
+
+   translation_cache_voffset     = 0x17800000;
+   translation_cache_w_voffset   = 0x16500000;
+   return 1;
+
    extern unsigned int __service_ptr;
 
    if(__service_ptr)
@@ -106,16 +112,18 @@ int ctr_svchack_init(void)
 #if 0
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
    svcControlProcessMemory(currentHandle, (u32)translation_cache, 0x0,
-//                           0x400000, MEMOP_PROT, 0b111);
-                           0x400000, MEMOP_PROT, 0b101);
+                           1 << TARGET_SIZE_2, MEMOP_PROT, 0b111);
+//                           0x400000, MEMOP_PROT, 0b101);
 ////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w, 0x0,
 ////                           0x400000, MEMOP_PROT, 0b111);
 
    svcCloseHandle(currentHandle);
 #endif
 
-   translation_cache_w_voffset = get_PA((u32)translation_cache_w) - (u32)translation_cache_w - 0x0C000000;
    translation_cache_voffset = get_PA((u32)translation_cache) - (u32)translation_cache - 0x0C000000;
+   translation_cache_w_voffset = get_PA((u32)translation_cache_w) - (u32)translation_cache_w - 0x0C000000;
+
+
    printf("translation_cache         : 0x%08X\n", translation_cache);
    printf("translation_cache   PA    : 0x%08X\n", get_PA((u32)translation_cache));
    printf("translation_cache_voffset : 0x%08X\n", translation_cache_voffset);
@@ -153,7 +161,6 @@ int ctr_svchack_init(void)
    printf("translation_cache_x linear test : %s\n", test_passed? "PASSED": "FAILED");
    DEBUG_HOLD();
 
-
    return 1;
 }
 Result GX_SetTextureCopy2(u32* gxbuf, u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags)
@@ -173,22 +180,42 @@ Result GX_SetTextureCopy2(u32* gxbuf, u32* inadr, u32 indim, u32* outadr, u32 ou
 	return GSPGPU_SubmitGxCommand(gxbuf, gxCommand, NULL);
 }
 
+static Result ctrGuSetCommandList_First(bool queued, u32* buf0a, u32 buf0s, u32* buf1a, u32 buf1s, u32* buf2a, u32 buf2s)
+{
+   u32 gxCommand[0x8];
+   gxCommand[0]=0x05 | (queued? 0x01000000 : 0x0); //CommandID
+   gxCommand[1]=(u32)buf0a; //buf0 address
+   gxCommand[2]=(u32)buf0s; //buf0 size
+   gxCommand[3]=(u32)buf1a; //buf1 address
+   gxCommand[4]=(u32)buf1s; //buf1 size
+   gxCommand[5]=(u32)buf2a; //buf2 address
+   gxCommand[6]=(u32)buf2s; //buf2 size
+   gxCommand[7]=0x0;
+
+   return GSPGPU_SubmitGxCommand(gxCmdBuf, gxCommand, NULL);
+}
+
+
 void GSPwn(void *dest, const void *src, size_t size)
 {
 	// Attempt a flush of the source, but ignore the result, since we may have just been asked to
 	// read unmapped memory or something similar.
-//	GSPGPU_FlushDataCache(NULL, src, size);
+//	GSPGPU_FlushDataCache(NULL, (u32)src & ~0xFFF, (size + 0x1FFF) & ~0xFFF);
 
+//   ctrGuSetCommandList_First(false, src, size, 0,0,0,0);
 	// Invalidate the destination's cache, since we're about to overwrite it.  Likewise, ignore
 	// errors, since it may be the destination that is an unmapped address.
 //	GSPGPU_InvalidateDataCache(NULL, dest, size);
 
    extern Handle gspEvents[GSPEVENT_MAX];
+//   svcClearEvent(gspEvents[GSPEVENT_PPF]);
+//   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
    svcClearEvent(gspEvents[GSPEVENT_PPF]);
-
 	if (GX_SetTextureCopy(NULL, src, 0, dest, 0, size, 8))
 		exit(1);
    svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
+//   svcClearEvent(gspEvents[GSPEVENT_PPF]);
+//   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], size * 100 );
    svcSleepThread(1000000);
 
 //   gspWaitForPPF();
@@ -198,6 +225,11 @@ void GSPwn(void *dest, const void *src, size_t size)
 //u32* translation_cache_clean = translation_cache;
 void ctr_flush_DCache_range(void* start, void* end)
 {
+//   svcFlushProcessDataCache(0xFFFF8001, (u32)start - (u32)translation_cache + (u32)translation_cache_w, (u32)end - (u32)start);
+//   svcInvalidateProcessDataCache(0xFFFF8001, (u32)start, (u32)end - (u32)start);
+//   GSPGPU_FlushDataCache(NULL, (u32)start - (u32)translation_cache + (u32)translation_cache_w, (u32)end - (u32)start);
+   ctrGuSetCommandList_First(false, (u32)start - (u32)translation_cache + (u32)translation_cache_w, (u32)end - (u32)start, 0,0,0,0);
+
    start = (void*)((u32)start & ~0xF);
    end   = (void*)(((u32)end   + 0xF) & ~0xF);
    u32 src = (u32)start - (u32)translation_cache + (u32)translation_cache_w + translation_cache_w_voffset;
@@ -221,19 +253,19 @@ void ctr_flush_DCache_range(void* start, void* end)
 
 //   translation_cache_clean = end;
 
-//   svcFlushProcessDataCache(0xFFFF8001, (u32)start - (u32)translation_cache + (u32)translation_cache_w, size);
-   svcFlushProcessDataCache(0xFFFF8001, (u32)start , size);
+
+//   svcFlushProcessDataCache(0xFFFF8001, (u32)start , size);
 //   printf("start: 0x%08X, end: 0x%08X\n", start, end);
 //   printf("GSPwn(0x%08X, 0x%08X, %u)\n", dst, src, size);
 //   DEBUG_HOLD();
-   ctr_flush_invalidate_cache();
+//   ctr_flush_invalidate_cache();
    GSPwn((void*)dst, (void*)src, size);
-   ctr_flush_invalidate_cache();
+//   ctr_flush_invalidate_cache();
 
 //   svcFlushProcessDataCache(0xFFFF8001, start, (u32)(end)-(u32)(start));
 }
 #include <string.h>
-void ctr_flush_DCache_range1(void* start, void* end)
+void ctr_flush_DCache_range22(void* start, void* end)
 {
 //   printf("start : 0x%08X, end: 0x%08X\n", start, end);
 //   DEBUG_HOLD();
