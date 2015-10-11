@@ -149,6 +149,7 @@ else ifeq ($(platform), ctr)
 
 	OBJS += frontend/3ds/3ds_utils.o
    OBJS += frontend/3ds/translation_cache.o
+#   OBJS += frontend/3ds/khaxinit.o
 
 
 #	CFLAGS += -DPCSX
@@ -158,6 +159,8 @@ else ifeq ($(platform), ctr)
 	ARCH = arm
 
 	STATIC_LINKING = 1
+
+#   CXXFLAGS += -fno-rtti -fno-exceptions -std=gnu++11
 
 # Xbox 360
 else ifeq ($(platform), xenon)

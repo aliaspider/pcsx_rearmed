@@ -206,9 +206,9 @@ void GSPwn(void *dest, const void *src, size_t size)
 //   gspWaitForPPF();
 
 }
-extern char translation_cache[1 << 22];
+extern char translation_cache[1 << TARGET_SIZE_2];
 //extern char * translation_cache;
-extern char translation_cache_w[1 << 22];
+extern char translation_cache_w[1 << TARGET_SIZE_2];
 
 static u32 translation_cache_voffset;
 static u32 translation_cache_w_voffset;
@@ -251,7 +251,8 @@ int ctr_svchack_init(void)
 
    DEBUG_HOLD();
 
-   return 1;
+//   if(__service_ptr)
+      return 1;
 
 #if 0
 
