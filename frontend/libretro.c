@@ -1317,6 +1317,14 @@ static void check_system_specs(void)
    environ_cb(RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL, &level);
 }
 
+#include "../../libpcsxcore/new_dynarec/assem_arm.h"
+char* translation_cache_ptr;
+char* translation_cache_w_ptr;
+u32 translation_cache_offset;
+
+//char translation_cache_static[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
+//char translation_cache_w_static[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
+
 void retro_init(void)
 {
 	const char *bios[] = { "scph1001", "scph5501", "scph7001" };
@@ -1324,6 +1332,12 @@ void retro_init(void)
 	char path[256];
 	int i, ret;
 	bool found_bios = false;
+
+   translation_cache_ptr = translation_cache;
+   translation_cache_w_ptr = translation_cache_w;
+   translation_cache_offset = (u32)translation_cache_w_ptr - (u32)translation_cache_ptr;
+
+
 
 #ifdef _3DS
    ctr_svchack_init_success = ctr_svchack_init();

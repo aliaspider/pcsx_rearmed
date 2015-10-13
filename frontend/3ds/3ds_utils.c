@@ -219,34 +219,21 @@ int ctr_svchack_init(void)
 {
    extern unsigned int __service_ptr;
 
-//   translation_cache_voffset     = 0x17800000;
-//   translation_cache_w_voffset   = 0x16500000;
-//   if(__service_ptr)
-//   {
-////      translation_cache_voffset     = 0x17CBE000;
-////      translation_cache_w_voffset   = 0x16A52000;
 
-//      translation_cache_voffset     = 0x16952000;
-//      translation_cache_w_voffset   = 0x16952000; //a7 -->
-//   }
-//   ctr_enable_all_svc();
-
-   translation_cache_w[0]= 0x3DF853BC;
-   translation_cache_w[1]= 0x03FB3A2D;
-   translation_cache_w[2]= 0xBCD3AD69;
-   translation_cache_w[3]= 0xF346ABC3;
-//   DEBUG_HOLD();
-
+   ((u32*)translation_cache_w_ptr)[0]= 0x3DF853BC;
+   ((u32*)translation_cache_w_ptr)[1]= 0x03FB3A2D;
+   ((u32*)translation_cache_w_ptr)[2]= 0xBCD3AD69;
+   ((u32*)translation_cache_w_ptr)[3]= 0xF346ABC3;
 //   svcFlushProcessDataCache(0xFFFF8001, translation_cache_w, 16);
-   ctrGuSetCommandList_First(false, translation_cache_w, 16, 0,0,0,0);
+   ctrGuSetCommandList_First(false, translation_cache_w_ptr, 16, 0,0,0,0);
 //   DEBUG_HOLD();
 
-   translation_cache_voffset   = (u32)get_fake_linear_addr(translation_cache)   - (u32)translation_cache;
-   translation_cache_w_voffset = (u32)get_fake_linear_addr(translation_cache_w) - (u32)translation_cache_w;
+   translation_cache_voffset   = (u32)get_fake_linear_addr(translation_cache_ptr)   - (u32)translation_cache_ptr;
+   translation_cache_w_voffset = (u32)get_fake_linear_addr(translation_cache_w_ptr) - (u32)translation_cache_w_ptr;
 
-   printf("translation_cache         : 0x%08X\n", translation_cache);
+   printf("translation_cache_ptr         : 0x%08X\n", translation_cache_ptr);
    printf("translation_cache_voffset : 0x%08X\n", translation_cache_voffset);
-   printf("translation_cache_w         : 0x%08X\n", translation_cache_w);
+   printf("translation_cache_w_ptr         : 0x%08X\n", translation_cache_w_ptr);
    printf("translation_cache_w_voffset : 0x%08X\n", translation_cache_w_voffset);
 
    DEBUG_HOLD();
@@ -265,24 +252,24 @@ int ctr_svchack_init(void)
    ctr_enable_all_svc();
 #if 0
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
-   svcControlProcessMemory(currentHandle, (u32)translation_cache, 0x0,
+   svcControlProcessMemory(currentHandle, (u32)translation_cache_ptr, 0x0,
                            1 << TARGET_SIZE_2, MEMOP_PROT, 0b111);
 //                           0x400000, MEMOP_PROT, 0b101);
-////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w, 0x0,
+////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w_ptr, 0x0,
 ////                           0x400000, MEMOP_PROT, 0b111);
 
    svcCloseHandle(currentHandle);
 #endif
 
-   translation_cache_voffset = get_PA((u32)translation_cache) - (u32)translation_cache - 0x0C000000;
-   translation_cache_w_voffset = get_PA((u32)translation_cache_w) - (u32)translation_cache_w - 0x0C000000;
+   translation_cache_voffset = get_PA((u32)translation_cache_ptr) - (u32)translation_cache_ptr - 0x0C000000;
+   translation_cache_w_voffset = get_PA((u32)translation_cache_w_ptr) - (u32)translation_cache_w_ptr - 0x0C000000;
 
 
-   printf("translation_cache         : 0x%08X\n", translation_cache);
-   printf("translation_cache   PA    : 0x%08X\n", get_PA((u32)translation_cache));
+   printf("translation_cache_ptr         : 0x%08X\n", translation_cache_ptr);
+   printf("translation_cache_ptr   PA    : 0x%08X\n", get_PA((u32)translation_cache_ptr));
    printf("translation_cache_voffset : 0x%08X\n", translation_cache_voffset);
-   printf("translation_cache_w         : 0x%08X\n", translation_cache_w);
-   printf("translation_cache_w PA      : 0x%08X\n", get_PA((u32)translation_cache_w));
+   printf("translation_cache_w_ptr         : 0x%08X\n", translation_cache_w_ptr);
+   printf("translation_cache_w_ptr PA      : 0x%08X\n", get_PA((u32)translation_cache_w_ptr));
    printf("translation_cache_w_voffset : 0x%08X\n", translation_cache_w_voffset);
    printf("diff W-X: 0x%08X\n", (u32)translation_cache_w - (u32)translation_cache);
    DEBUG_HOLD();
@@ -290,8 +277,8 @@ int ctr_svchack_init(void)
    u32 ptr, ptr_offset, test_passed;
 
    test_passed = 1;
-   ptr_offset = get_PA((u32)translation_cache) - (u32)translation_cache;
-   for (ptr = (u32)translation_cache; ptr < ((u32)translation_cache + 0x400000); ptr+=0x1000)
+   ptr_offset = get_PA((u32)translation_cache_ptr) - (u32)translation_cache_ptr;
+   for (ptr = (u32)translation_cache_ptr; ptr < ((u32)translation_cache_ptr + (1 << TARGET_SIZE_2)); ptr+=0x1000)
    {
       if (get_PA(ptr)!= (ptr + ptr_offset))
       {
@@ -303,8 +290,8 @@ int ctr_svchack_init(void)
    DEBUG_HOLD();
 
    test_passed = 1;
-   ptr_offset = get_PA((u32)translation_cache_w) - (u32)translation_cache_w;
-   for (ptr = (u32)translation_cache_w; ptr < ((u32)translation_cache_w + 0x400000); ptr+=0x1000)
+   ptr_offset = get_PA((u32)translation_cache_w_ptr) - (u32)translation_cache_w_ptr;
+   for (ptr = (u32)translation_cache_w_ptr; ptr < ((u32)translation_cache_w_ptr + (1 << TARGET_SIZE_2)); ptr+=0x1000)
    {
       if (get_PA(ptr)!= (ptr + ptr_offset))
       {
@@ -326,12 +313,12 @@ void ctr_flush_DCache_range(void* start, void* end)
 //   svcInvalidateProcessDataCache(0xFFFF8001, (u32)start, (u32)end - (u32)start);
 //   GSPGPU_FlushDataCache(NULL, (u32)start - (u32)translation_cache + (u32)translation_cache_w, (u32)end - (u32)start);
 //   DEBUG_HOLD();
-   ctrGuSetCommandList_First(false, (u32)start - (u32)translation_cache + (u32)translation_cache_w, (u32)end - (u32)start, 0,0,0,0);
+   ctrGuSetCommandList_First(false, (u32)start + translation_cache_offset, (u32)end - (u32)start, 0,0,0,0);
 
 //   DEBUG_HOLD();
    start = (void*)((u32)start & ~0xF);
    end   = (void*)(((u32)end   + 0xF) & ~0xF);
-   u32 src = (u32)start - (u32)translation_cache + (u32)translation_cache_w + translation_cache_w_voffset;
+   u32 src = (u32)start + translation_cache_offset + translation_cache_w_voffset;
    u32 dst = (u32)start + translation_cache_voffset;
    u32 size = (u32)(end)-(u32)(start);
 //   size = (size + 0xF) & ~0xF;
@@ -372,7 +359,7 @@ void ctr_flush_DCache_range22(void* start, void* end)
 //   DEBUG_HOLD();
 
 
-   u32 src = (u32)start - (u32)translation_cache + (u32)translation_cache_w;
+   u32 src = (u32)start + translation_cache_offset;
    u32 dst = (u32)start;
    u32 size = (u32)(end)-(u32)(start);
 

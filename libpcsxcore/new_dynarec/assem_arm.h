@@ -76,8 +76,14 @@ extern char translation_cache[1 << TARGET_SIZE_2];
 //extern char * translation_cache;
 extern char translation_cache_w[1 << TARGET_SIZE_2];
 
-#define to_write_buffer_u32(X)   ((u32*)(((u32)(X) + ((u32)translation_cache_w) - (u32)translation_cache)))
-#define to_write_buffer_u8(X)     ((u8*)(((u32)(X) + ((u32)translation_cache_w) - (u32)translation_cache)))
+extern char* translation_cache_ptr;
+extern char* translation_cache_w_ptr;
+extern u32 translation_cache_offset;
+
+
+
+#define to_write_buffer_u32(X)   ((u32*)(((u32)(X) + translation_cache_offset)))
+#define to_write_buffer_u8(X)     ((u8*)(((u32)(X) + translation_cache_offset)))
 
 #endif
 #define BASE_ADDR ((u_int)translation_cache)
