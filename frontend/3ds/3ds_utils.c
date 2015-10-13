@@ -220,6 +220,17 @@ int ctr_svchack_init(void)
    extern unsigned int __service_ptr;
 
 
+   if(translation_cache_ptr != translation_cache)
+   {
+      ((u32*)translation_cache_ptr)[0]= 0xF346ABC3;
+      ((u32*)translation_cache_ptr)[1]= 0xBCD3AD69;
+      ((u32*)translation_cache_ptr)[2]= 0x03FB3A2D;
+      ((u32*)translation_cache_ptr)[3]= 0x3DF853BC;
+
+//      svcFlushProcessDataCache(0xFFFF8001, translation_cache_w, 16);
+      ctrGuSetCommandList_First(false, translation_cache_ptr, 16, 0,0,0,0);
+   }
+
    ((u32*)translation_cache_w_ptr)[0]= 0x3DF853BC;
    ((u32*)translation_cache_w_ptr)[1]= 0x03FB3A2D;
    ((u32*)translation_cache_w_ptr)[2]= 0xBCD3AD69;
@@ -231,32 +242,33 @@ int ctr_svchack_init(void)
    translation_cache_voffset   = (u32)get_fake_linear_addr(translation_cache_ptr)   - (u32)translation_cache_ptr;
    translation_cache_w_voffset = (u32)get_fake_linear_addr(translation_cache_w_ptr) - (u32)translation_cache_w_ptr;
 
-   printf("translation_cache_ptr         : 0x%08X\n", translation_cache_ptr);
-   printf("translation_cache_voffset : 0x%08X\n", translation_cache_voffset);
-   printf("translation_cache_w_ptr         : 0x%08X\n", translation_cache_w_ptr);
-   printf("translation_cache_w_voffset : 0x%08X\n", translation_cache_w_voffset);
+   printf("tr_cache_ptr      : 0x%08X\n", translation_cache_ptr);
+   printf("tr_cache_voffset  : 0x%08X\n", translation_cache_voffset);
+   printf("tr_cache_w_ptr    : 0x%08X\n", translation_cache_w_ptr);
+   printf("tr_cache_w_voffset: 0x%08X\n", translation_cache_w_voffset);
+   printf("tr_cache_offset   : 0x%08X\n", translation_cache_offset);
 
    DEBUG_HOLD();
 
 //   if(__service_ptr)
-      return 1;
+//      return 1;
 
-#if 0
+#if 1
 
    if(__service_ptr)
 //      return 0;
-      if(khaxInit())
+//      if(khaxInit())
          return 0;
 
    /* CFW */
    ctr_enable_all_svc();
-#if 0
+#if 1
    svcDuplicateHandle(&currentHandle, 0xFFFF8001);
    svcControlProcessMemory(currentHandle, (u32)translation_cache_ptr, 0x0,
                            1 << TARGET_SIZE_2, MEMOP_PROT, 0b111);
-//                           0x400000, MEMOP_PROT, 0b101);
-////   svcControlProcessMemory(currentHandle, (u32)translation_cache_w_ptr, 0x0,
-////                           0x400000, MEMOP_PROT, 0b111);
+//                           1 << TARGET_SIZE_2, MEMOP_PROT, 0b101);
+   svcControlProcessMemory(currentHandle, (u32)translation_cache_w_ptr, 0x0,
+                           1 << TARGET_SIZE_2, MEMOP_PROT, 0b111);
 
    svcCloseHandle(currentHandle);
 #endif
@@ -265,13 +277,12 @@ int ctr_svchack_init(void)
    translation_cache_w_voffset = get_PA((u32)translation_cache_w_ptr) - (u32)translation_cache_w_ptr - 0x0C000000;
 
 
-   printf("translation_cache_ptr         : 0x%08X\n", translation_cache_ptr);
-   printf("translation_cache_ptr   PA    : 0x%08X\n", get_PA((u32)translation_cache_ptr));
-   printf("translation_cache_voffset : 0x%08X\n", translation_cache_voffset);
-   printf("translation_cache_w_ptr         : 0x%08X\n", translation_cache_w_ptr);
-   printf("translation_cache_w_ptr PA      : 0x%08X\n", get_PA((u32)translation_cache_w_ptr));
-   printf("translation_cache_w_voffset : 0x%08X\n", translation_cache_w_voffset);
-   printf("diff W-X: 0x%08X\n", (u32)translation_cache_w - (u32)translation_cache);
+   printf("tr_cache_ptr      : 0x%08X\n", translation_cache_ptr);
+   printf("tr_cache_ptr PA   : 0x%08X\n", get_PA((u32)translation_cache_ptr));
+   printf("tr_cache_voffset  : 0x%08X\n", translation_cache_voffset);
+   printf("tr_cache_w_ptr    : 0x%08X\n", translation_cache_w_ptr);
+   printf("tr_cache_w_ptr PA : 0x%08X\n", get_PA((u32)translation_cache_w_ptr));
+   printf("tr_cache_w_voffset: 0x%08X\n", translation_cache_w_voffset);
    DEBUG_HOLD();
 
    u32 ptr, ptr_offset, test_passed;

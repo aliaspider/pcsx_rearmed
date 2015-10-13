@@ -1317,10 +1317,13 @@ static void check_system_specs(void)
    environ_cb(RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL, &level);
 }
 
-#include "../../libpcsxcore/new_dynarec/assem_arm.h"
+#include "../libpcsxcore/new_dynarec/assem_arm.h"
+#include <malloc.h>
 char* translation_cache_ptr;
 char* translation_cache_w_ptr;
 u32 translation_cache_offset;
+char* translation_cache_ptr_max;
+char* translation_cache_w_ptr_max;
 
 //char translation_cache_static[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
 //char translation_cache_w_static[1 << TARGET_SIZE_2] __attribute__((aligned(4096)));
@@ -1333,13 +1336,25 @@ void retro_init(void)
 	int i, ret;
 	bool found_bios = false;
 
+
    translation_cache_ptr = translation_cache;
    translation_cache_w_ptr = translation_cache_w;
+
+#ifdef _3DS
+//   translation_cache_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
+   translation_cache_w_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
+#else
+   translation_cache_w_ptr = memalign(0x1000, 1<<TARGET_SIZE_2);
+#endif
+
    translation_cache_offset = (u32)translation_cache_w_ptr - (u32)translation_cache_ptr;
 
+   translation_cache_ptr_max = (char*)((u32)translation_cache_ptr + (1<<TARGET_SIZE_2));
+   translation_cache_w_ptr_max = (char*)((u32)translation_cache_w_ptr + (1<<TARGET_SIZE_2));
 
 
 #ifdef _3DS
+
    ctr_svchack_init_success = ctr_svchack_init();
    psxMapHook = pl_3ds_mmap;
    psxUnmapHook = pl_3ds_munmap;

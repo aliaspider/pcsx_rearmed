@@ -22,6 +22,7 @@ ifeq ($(TARGET_ARCH),arm)
    LOCAL_CFLAGS += -DANDROID_ARM
 
    LOCAL_SRC_FILES += ../libpcsxcore/gte_arm.S
+   LOCAL_SRC_FILES += ../frontend/3ds/translation_cache.S
 
    # dynarec
    LOCAL_SRC_FILES += ../libpcsxcore/new_dynarec/new_dynarec.c ../libpcsxcore/new_dynarec/linkage_arm.S ../libpcsxcore/new_dynarec/emu_if.c ../libpcsxcore/new_dynarec/pcsxmem.c
