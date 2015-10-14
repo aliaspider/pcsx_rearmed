@@ -200,7 +200,8 @@ void GSPwn(void *dest, const void *src, size_t size)
 //   DEBUG_HOLD();
 //   svcClearEvent(gspEvents[GSPEVENT_PPF]);
 //   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], size * 100 );
-   svcSleepThread(1000000);
+//   svcSleepThread(1000000);
+   svcSleepThread(10000000);
 //   DEBUG_HOLD();
 
 //   gspWaitForPPF();
@@ -231,6 +232,7 @@ int ctr_svchack_init(void)
       ctrGuSetCommandList_First(false, translation_cache_ptr, 16, 0,0,0,0);
    }
 
+
    ((u32*)translation_cache_w_ptr)[0]= 0x3DF853BC;
    ((u32*)translation_cache_w_ptr)[1]= 0x03FB3A2D;
    ((u32*)translation_cache_w_ptr)[2]= 0xBCD3AD69;
@@ -241,6 +243,8 @@ int ctr_svchack_init(void)
 
    translation_cache_voffset   = (u32)get_fake_linear_addr(translation_cache_ptr)   - (u32)translation_cache_ptr;
    translation_cache_w_voffset = (u32)get_fake_linear_addr(translation_cache_w_ptr) - (u32)translation_cache_w_ptr;
+
+//   translation_cache_voffset = translation_cache_w_voffset;
 
    printf("tr_cache_ptr      : 0x%08X\n", translation_cache_ptr);
    printf("tr_cache_voffset  : 0x%08X\n", translation_cache_voffset);

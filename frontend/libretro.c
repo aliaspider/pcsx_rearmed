@@ -1343,6 +1343,34 @@ void retro_init(void)
    translation_cache_w_ptr = translation_cache_w;
 
 #ifdef _3DS
+   if (translation_cache_w_ptr > 0x01800000)
+   {
+      u32 textSize=0;
+      u32 writeBufferSize=0;
+      u32* writeBufferptr=NULL;
+      u32 tmp_ptr =0x00100000;
+      MemInfo tmpMemInfo;
+      PageInfo tmpPageInfo;
+      svcQueryMemory(&tmpMemInfo, &tmpPageInfo, tmp_ptr);
+      textSize = tmpMemInfo.size;
+      tmp_ptr = tmpMemInfo.base_addr + tmpMemInfo.size;
+      svcQueryMemory(&tmpMemInfo, &tmpPageInfo, tmp_ptr);
+      tmp_ptr = tmpMemInfo.base_addr + tmpMemInfo.size;
+      svcQueryMemory(&tmpMemInfo, &tmpPageInfo, tmp_ptr);
+      writeBufferptr = (u32*)tmpMemInfo.base_addr;
+      writeBufferSize = tmpMemInfo.size;
+
+      memset(writeBufferptr, 0xFC, writeBufferSize);
+      printf("textSize : 0x%08X\n", textSize);
+      printf("writeBufferSize : 0x%08X\n", writeBufferSize);
+      printf("writeBufferptr : 0x%08X\n", writeBufferptr);
+
+      if(writeBufferSize > (1 << TARGET_SIZE_2))
+         translation_cache_w_ptr = (u8*)(((u32)writeBufferptr + writeBufferSize - (1<<TARGET_SIZE_2))&~0xFFF);
+      else
+         translation_cache_w_ptr = writeBufferptr;
+      DEBUG_HOLD();
+   }
 //   translation_cache_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
 //   translation_cache_w_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
 #else

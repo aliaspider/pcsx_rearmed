@@ -61,7 +61,7 @@
 extern char *invc_ptr;
 
 //#define TARGET_SIZE_2 24 // 2^24 = 16 megabytes
-#define TARGET_SIZE_2 22
+#define TARGET_SIZE_2 21
 //#define TARGET_SIZE_2 19
 
 // Code generator target address
