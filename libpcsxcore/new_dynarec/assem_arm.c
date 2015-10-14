@@ -2746,7 +2746,7 @@ emit_extjump2(u_int addr, int target, int linker)
 {
 //  u_char *ptr=(u_char *)to_write_buffer_u8(addr);
   assert(addr>=BASE_ADDR&&addr<(BASE_ADDR+(1<<TARGET_SIZE_2)));
-  addr = addr + (u32)translation_cache_w - (u32)translation_cache;
+  addr = addr + translation_cache_offset;
   u_char *ptr=(u_char *)addr;
   assert((ptr[3]&0x0e)==0xa);
   emit_loadlp(target,0);

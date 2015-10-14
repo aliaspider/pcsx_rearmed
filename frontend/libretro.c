@@ -1319,6 +1319,8 @@ static void check_system_specs(void)
 
 #include "../libpcsxcore/new_dynarec/assem_arm.h"
 #include <malloc.h>
+#include <sys/mman.h>
+#include <errno.h>
 char* translation_cache_ptr;
 char* translation_cache_w_ptr;
 u32 translation_cache_offset;
@@ -1342,9 +1344,17 @@ void retro_init(void)
 
 #ifdef _3DS
 //   translation_cache_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
-   translation_cache_w_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
+//   translation_cache_w_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
 #else
-   translation_cache_w_ptr = memalign(0x1000, 1<<TARGET_SIZE_2);
+//   translation_cache_w_ptr = memalign(0x1000, 1<<TARGET_SIZE_2);
+   translation_cache_w_ptr = 0x58000000;
+   if (mmap (translation_cache_w_ptr, 1<<TARGET_SIZE_2,
+             PROT_READ | PROT_WRITE ,
+             MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+             -1, 0) <= 0) {
+     SysPrintf("mmap() failed: %s\n", strerror(errno));
+   }
+
 #endif
 
    translation_cache_offset = (u32)translation_cache_w_ptr - (u32)translation_cache_ptr;

@@ -70,7 +70,7 @@ static void __clear_cache2(void *start, void *end) {
 }
 #define __clear_cache(start, end)  __clear_cache2(start, end)
 
-//#define assert(...)   (void)0
+#define assert(...)   (void)0
 
 #endif
 

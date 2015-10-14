@@ -253,7 +253,7 @@ int ctr_svchack_init(void)
 //   if(__service_ptr)
 //      return 1;
 
-#if 1
+#if 0
 
    if(__service_ptr)
 //      return 0;
