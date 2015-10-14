@@ -88,6 +88,23 @@ void ctr_flush_invalidate_cache(void)
    ctr_invalidate_ICache();
 }
 
+Result GX_SetTextureCopy2(u32* gxbuf, u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags)
+{
+	if(!gxbuf)gxbuf=gxCmdBuf;
+
+	u32 gxCommand[0x8];
+	gxCommand[0]=0x01000004; //CommandID
+	gxCommand[1]=(u32)inadr;
+	gxCommand[2]=(u32)outadr;
+	gxCommand[3]=size;
+	gxCommand[4]=indim;
+	gxCommand[5]=outdim;
+	gxCommand[6]=flags;
+	gxCommand[7]=0x0;
+
+	return GSPGPU_SubmitGxCommand(gxbuf, gxCommand, NULL);
+}
+
 
 
 /* only works if addr is page aligned, and the first 16bytes are
@@ -110,7 +127,7 @@ u32* get_fake_linear_addr(u32* addr)
 //   DEBUG_HOLD();
    addr = (u32*)((u32)addr & ~0xFFF);
 
-   svcSleepThread(1000000);
+   svcSleepThread(10000000);
 
    u32 start_address;
    u32* ret = (u32*)-1;
@@ -120,7 +137,7 @@ u32* get_fake_linear_addr(u32* addr)
       start_address = (u32*)(0x14000000 + top_fcram - pages_to_scan * stepSize);
 
       svcClearEvent(gspEvents[GSPEVENT_PPF]);
-         GX_SetTextureCopy(NULL, start_address, (skipSize << 16) | 0x10, buffer, 0x10, buffer_size, 0xC);
+         GX_SetTextureCopy2(NULL, start_address, (skipSize << 16) | 0x10, buffer, 0x10, buffer_size, 0xC);
       svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
 
 //      DEBUG_HOLD();
@@ -144,22 +161,6 @@ u32* get_fake_linear_addr(u32* addr)
    return ret;
 }
 
-Result GX_SetTextureCopy2(u32* gxbuf, u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags)
-{
-	if(!gxbuf)gxbuf=gxCmdBuf;
-
-	u32 gxCommand[0x8];
-	gxCommand[0]=0x01000004; //CommandID
-	gxCommand[1]=(u32)inadr;
-	gxCommand[2]=(u32)outadr;
-	gxCommand[3]=size;
-	gxCommand[4]=indim;
-	gxCommand[5]=outdim;
-	gxCommand[6]=flags;
-	gxCommand[7]=0x0;
-
-	return GSPGPU_SubmitGxCommand(gxbuf, gxCommand, NULL);
-}
 
 static Result ctrGuSetCommandList_First(bool queued, u32* buf0a, u32 buf0s, u32* buf1a, u32 buf1s, u32* buf2a, u32 buf2s)
 {
@@ -201,7 +202,7 @@ void GSPwn(void *dest, const void *src, size_t size)
 //   svcClearEvent(gspEvents[GSPEVENT_PPF]);
 //   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], size * 100 );
 //   svcSleepThread(1000000);
-   svcSleepThread(10000000);
+//   svcSleepThread(10000000);
 //   DEBUG_HOLD();
 
 //   gspWaitForPPF();
@@ -229,7 +230,7 @@ int ctr_svchack_init(void)
       ((u32*)translation_cache_ptr)[3]= 0x3DF853BC;
 
 //      svcFlushProcessDataCache(0xFFFF8001, translation_cache_w, 16);
-      ctrGuSetCommandList_First(false, translation_cache_ptr, 16, 0,0,0,0);
+      ctrGuSetCommandList_First(true, translation_cache_ptr, 16, 0,0,0,0);
    }
 
 
@@ -238,7 +239,7 @@ int ctr_svchack_init(void)
    ((u32*)translation_cache_w_ptr)[2]= 0xBCD3AD69;
    ((u32*)translation_cache_w_ptr)[3]= 0xF346ABC3;
 //   svcFlushProcessDataCache(0xFFFF8001, translation_cache_w, 16);
-   ctrGuSetCommandList_First(false, translation_cache_w_ptr, 16, 0,0,0,0);
+   ctrGuSetCommandList_First(true, translation_cache_w_ptr, 16, 0,0,0,0);
 //   DEBUG_HOLD();
 
    translation_cache_voffset   = (u32)get_fake_linear_addr(translation_cache_ptr)   - (u32)translation_cache_ptr;
@@ -254,15 +255,42 @@ int ctr_svchack_init(void)
 
    DEBUG_HOLD();
 
+#if 1
+   u32 ptr, ptr_offset, test_passed, fake_ptr;
+
+   test_passed = 1;
+   for (ptr = (u32)translation_cache_w_ptr; ptr < ((u32)translation_cache_w_ptr + (1 << TARGET_SIZE_2)); ptr+=0x1000)
+   {
+      ((u32*)ptr)[0]= 0x3DF853BC|ptr;
+      ((u32*)ptr)[1]= 0x03FB3A2D|ptr;
+      ((u32*)ptr)[2]= 0xBCD3AD69|ptr;
+      ((u32*)ptr)[3]= 0xF346ABC3|ptr;
+      ctrGuSetCommandList_First(true, ptr, 16, 0,0,0,0);
+      fake_ptr = (u32)get_fake_linear_addr(ptr);
+      if (fake_ptr!= (ptr + translation_cache_w_voffset))
+      {
+         test_passed = 0;
+         break;
+      }
+   }
+   printf("translation_cache_w_ptr linear test : %s\n", test_passed? "PASSED": "FAILED");
+   if(!test_passed)
+   {
+      printf("failed @0x%08X --> 0x%08X\n", ptr, fake_ptr);
+      printf("offset old:0x%08X new: 0x%08X\n", translation_cache_w_voffset, fake_ptr - ptr);
+   }
+
+   DEBUG_HOLD();
+#endif
 //   if(__service_ptr)
 //      return 1;
 
 #if 0
 
-   if(__service_ptr)
+//   if(__service_ptr)
 //      return 0;
 //      if(khaxInit())
-         return 0;
+//         return 0;
 
    /* CFW */
    ctr_enable_all_svc();
@@ -314,7 +342,7 @@ int ctr_svchack_init(void)
          break;
       }
    }
-   printf("translation_cache_x linear test : %s\n", test_passed? "PASSED": "FAILED");
+   printf("translation_cache_w linear test : %s\n", test_passed? "PASSED": "FAILED");
    DEBUG_HOLD();
 
    return 1;

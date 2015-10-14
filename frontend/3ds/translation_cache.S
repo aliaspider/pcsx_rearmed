@@ -7,8 +7,8 @@
 #define TARGET_SIZE_2 21
 
 .section .text
-.align	15
-.space	0x200000
+#.align	15
+#.space	0x200000
 .align	15
 .global translation_cache
 .type	translation_cache, %object
@@ -21,11 +21,11 @@ translation_cache:
 	.space	(1 << TARGET_SIZE_2) - 0x10
 
 .section .bss
-.align	15
-.space	0x100000
+#.align	15
+#.space	0x100000
 .align	15
 .global translation_cache_w
 .type	translation_cache_w, %object
-.size	translation_cache_w, 1 << TARGET_SIZE_2
+.size	translation_cache_w, 1 << (TARGET_SIZE_2 - 0)
 translation_cache_w:
-	.space	1 << TARGET_SIZE_2
+	.space	1 << (TARGET_SIZE_2 - 0)
