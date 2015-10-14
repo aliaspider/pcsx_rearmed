@@ -127,7 +127,7 @@ u32* get_fake_linear_addr(u32* addr)
 //   DEBUG_HOLD();
    addr = (u32*)((u32)addr & ~0xFFF);
 
-   svcSleepThread(10000000);
+//   svcSleepThread(10000000);
 
    u32 start_address;
    u32* ret = (u32*)-1;
@@ -136,9 +136,11 @@ u32* get_fake_linear_addr(u32* addr)
    {
       start_address = (u32*)(0x14000000 + top_fcram - pages_to_scan * stepSize);
 
+      GSPGPU_InvalidateDataCache(NULL, buffer, buffer_size);
       svcClearEvent(gspEvents[GSPEVENT_PPF]);
          GX_SetTextureCopy2(NULL, start_address, (skipSize << 16) | 0x10, buffer, 0x10, buffer_size, 0xC);
       svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
+
 
 //      DEBUG_HOLD();
       int i;
@@ -201,7 +203,7 @@ void GSPwn(void *dest, const void *src, size_t size)
 //   DEBUG_HOLD();
 //   svcClearEvent(gspEvents[GSPEVENT_PPF]);
 //   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], size * 100 );
-//   svcSleepThread(1000000);
+   svcSleepThread(1000000);
 //   svcSleepThread(10000000);
 //   DEBUG_HOLD();
 
@@ -222,16 +224,16 @@ int ctr_svchack_init(void)
    extern unsigned int __service_ptr;
 
 
-   if(translation_cache_ptr != translation_cache)
-   {
-      ((u32*)translation_cache_ptr)[0]= 0xF346ABC3;
-      ((u32*)translation_cache_ptr)[1]= 0xBCD3AD69;
-      ((u32*)translation_cache_ptr)[2]= 0x03FB3A2D;
-      ((u32*)translation_cache_ptr)[3]= 0x3DF853BC;
+//   if(translation_cache_ptr != translation_cache)
+//   {
+//      ((u32*)translation_cache_ptr)[0]= 0xF346ABC3;
+//      ((u32*)translation_cache_ptr)[1]= 0xBCD3AD69;
+//      ((u32*)translation_cache_ptr)[2]= 0x03FB3A2D;
+//      ((u32*)translation_cache_ptr)[3]= 0x3DF853BC;
 
-//      svcFlushProcessDataCache(0xFFFF8001, translation_cache_w, 16);
-      ctrGuSetCommandList_First(true, translation_cache_ptr, 16, 0,0,0,0);
-   }
+////      svcFlushProcessDataCache(0xFFFF8001, translation_cache_w, 16);
+//      ctrGuSetCommandList_First(true, translation_cache_ptr, 16, 0,0,0,0);
+//   }
 
 
    ((u32*)translation_cache_w_ptr)[0]= 0x3DF853BC;
@@ -259,6 +261,23 @@ int ctr_svchack_init(void)
    u32 ptr, ptr_offset, test_passed, fake_ptr;
 
    test_passed = 1;
+   for (ptr = (u32)translation_cache_ptr; ptr < ((u32)translation_cache_ptr + (1 << TARGET_SIZE_2)); ptr+=0x1000)
+   {
+      fake_ptr = (u32)get_fake_linear_addr(ptr);
+      if (fake_ptr!= (ptr + translation_cache_voffset))
+      {
+         test_passed = 0;
+         break;
+      }
+   }
+   printf("translation_cache_ptr linear test : %s\n", test_passed? "PASSED": "FAILED");
+   if(!test_passed)
+   {
+      printf("failed @0x%08X --> 0x%08X\n", ptr, fake_ptr);
+      printf("offset old:0x%08X new: 0x%08X\n", translation_cache_voffset, fake_ptr - ptr);
+   }
+
+   test_passed = 1;
    for (ptr = (u32)translation_cache_w_ptr; ptr < ((u32)translation_cache_w_ptr + (1 << TARGET_SIZE_2)); ptr+=0x1000)
    {
       ((u32*)ptr)[0]= 0x3DF853BC|ptr;
@@ -283,7 +302,7 @@ int ctr_svchack_init(void)
    DEBUG_HOLD();
 #endif
 //   if(__service_ptr)
-//      return 1;
+      return 1;
 
 #if 0
 
@@ -317,7 +336,7 @@ int ctr_svchack_init(void)
    printf("tr_cache_w_voffset: 0x%08X\n", translation_cache_w_voffset);
    DEBUG_HOLD();
 
-   u32 ptr, ptr_offset, test_passed;
+//   u32 ptr, ptr_offset, test_passed;
 
    test_passed = 1;
    ptr_offset = get_PA((u32)translation_cache_ptr) - (u32)translation_cache_ptr;

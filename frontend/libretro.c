@@ -1365,10 +1365,17 @@ void retro_init(void)
       printf("writeBufferSize : 0x%08X\n", writeBufferSize);
       printf("writeBufferptr : 0x%08X\n", writeBufferptr);
 
-      if(writeBufferSize > (1 << TARGET_SIZE_2))
-         translation_cache_w_ptr = (u8*)(((u32)writeBufferptr + writeBufferSize - (1<<TARGET_SIZE_2))&~0xFFF);
-      else
+//      if(writeBufferSize > (1 << TARGET_SIZE_2))
+//         translation_cache_w_ptr = (u8*)(((u32)writeBufferptr + writeBufferSize - (1<<TARGET_SIZE_2))&~0xFFF);
+//      else
          translation_cache_w_ptr = writeBufferptr;
+
+//      translation_cache_w_ptr = (u8*)(((u32)writeBufferptr + 0xFFFFF) &~0xFFFFF);
+
+//      translation_cache_ptr = (u8*)(((u32)translation_cache + 0xFFFFF) &~0xFFFFF);
+//      translation_cache_ptr = (u8*)(0x00800000);
+//      translation_cache_w_ptr = (u8*)(0x00800000);
+//      translation_cache_w_ptr = (u8*)(0x01000000);
       DEBUG_HOLD();
    }
 //   translation_cache_ptr = linearMemAlign(1<<TARGET_SIZE_2, 0x1000);
