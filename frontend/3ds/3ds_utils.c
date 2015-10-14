@@ -196,15 +196,15 @@ void GSPwn(void *dest, const void *src, size_t size)
 //   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
 //   DEBUG_HOLD();
    svcClearEvent(gspEvents[GSPEVENT_PPF]);
-	if (GX_SetTextureCopy(NULL, src, 0, dest, 0, size, 8))
+	if (GX_SetTextureCopy2(NULL, src, 0, dest, 0, size, 8))
 		exit(1);
 //   DEBUG_HOLD();
    svcWaitSynchronization(gspEvents[GSPEVENT_PPF], U64_MAX);
 //   DEBUG_HOLD();
 //   svcClearEvent(gspEvents[GSPEVENT_PPF]);
 //   svcWaitSynchronization(gspEvents[GSPEVENT_PPF], size * 100 );
-   svcSleepThread(1000000);
-//   svcSleepThread(10000000);
+//   svcSleepThread(1000000);
+   svcSleepThread(10000000);
 //   DEBUG_HOLD();
 
 //   gspWaitForPPF();
@@ -375,11 +375,16 @@ void ctr_flush_DCache_range(void* start, void* end)
 //   svcInvalidateProcessDataCache(0xFFFF8001, (u32)start, (u32)end - (u32)start);
 //   GSPGPU_FlushDataCache(NULL, (u32)start - (u32)translation_cache + (u32)translation_cache_w, (u32)end - (u32)start);
 //   DEBUG_HOLD();
-   ctrGuSetCommandList_First(false, (u32)start + translation_cache_offset, (u32)end - (u32)start, 0,0,0,0);
+
 
 //   DEBUG_HOLD();
    start = (void*)((u32)start & ~0xF);
    end   = (void*)(((u32)end   + 0xF) & ~0xF);
+
+   ctrGuSetCommandList_First(true, (u32)start + translation_cache_offset, (u32)end - (u32)start, 0,0,0,0);
+
+   GSPGPU_InvalidateDataCache(NULL, (u32)start + translation_cache_offset, (u32)end - (u32)start);
+
    u32 src = (u32)start + translation_cache_offset + translation_cache_w_voffset;
    u32 dst = (u32)start + translation_cache_voffset;
    u32 size = (u32)(end)-(u32)(start);

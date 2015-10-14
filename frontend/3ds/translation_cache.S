@@ -19,14 +19,17 @@ tr_page
 tr_page
 tr_page
 tr_page
+
 tr_page
 tr_page
 tr_page
 tr_page
+
 tr_page
 tr_page
 tr_page
 tr_page
+
 tr_page
 tr_page
 tr_page
@@ -38,14 +41,17 @@ tr_page_16
 tr_page_16
 tr_page_16
 tr_page_16
+
 tr_page_16
 tr_page_16
 tr_page_16
 tr_page_16
+
 tr_page_16
 tr_page_16
 tr_page_16
 tr_page_16
+
 tr_page_16
 tr_page_16
 tr_page_16
@@ -53,14 +59,14 @@ tr_page_16
 .endm
 
 .section .text
-#.align	15
-#.space	0x200000
 .align	15
+.space	0x38000
+#.align	15
 .global translation_cache
 .type	translation_cache, %object
 .size	translation_cache, (1 << TARGET_SIZE_2)
 translation_cache:
-tr_1MEG
+#tr_1MEG
 tr_1MEG
 tr_1MEG
 #   .word 0xF346ABC3
@@ -70,8 +76,8 @@ tr_1MEG
 #   .space	(1 << TARGET_SIZE_2) - 0x10
 
 .section .bss
-#.align	15
-#.space	0x100000
+.align	15
+.space	0x100000
 .align	15
 .global translation_cache_w
 .type	translation_cache_w, %object
